@@ -33,3 +33,10 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# native
+ios
+android
+
+# IDE
+.idea

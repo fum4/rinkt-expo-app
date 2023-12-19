@@ -15,16 +15,32 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nomadware.io.expo-demo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.nomadware.io.expodemo"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4537497c-eed8-4ca5-af1c-d165b90629e5"
+      }
+    },
+    "owner": "nomadware.io",
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Whisper AI to access your microphone."
+        }
+      ]
+    ]
   }
 }
