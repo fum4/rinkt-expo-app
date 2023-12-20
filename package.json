@@ -12,15 +12,16 @@
     "expo": "~49.0.15",
     "expo-av": "~13.4.1",
     "expo-dev-client": "~2.4.12",
+    "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",
     "react-native": "0.72.6",
-    "whisper.rn": "^0.3.9",
-    "expo-splash-screen": "~0.20.5"
+    "whisper.rn": "^0.3.9"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~18.2.14",
+    "prettier": "^3.1.1",
     "typescript": "^5.1.3"
   },
   "private": true

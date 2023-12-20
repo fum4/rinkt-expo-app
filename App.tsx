@@ -1,6 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  SafeAreaView,
+  Pressable,
+} from 'react-native';
+import { Foundation } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import {
   TranscribeRealtimeOptions,
@@ -10,10 +18,25 @@ import {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingBottom: 20,
+  },
+  title: {
+    fontSize: 20,
+  },
+  content: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    height: '100%',
+    gap: 20,
+  },
+  transcription: {
+    paddingHorizontal: 20,
+  },
+  pressable: {
+    flexDirection: 'row',
+    gap: 8,
   },
 });
 
@@ -22,18 +45,20 @@ const realtimeOptions: TranscribeRealtimeOptions = {
   realtimeAudioSec: 60,
   realtimeAudioSliceSec: 20,
   maxThreads: 6,
+  useVad: true,
 };
 
 const App = () => {
   const whisper = useRef<WhisperContext>();
   const [isModelInitialized, setIsModelInitialized] = useState(false);
-  const [realtimeText, setRealtimeText] = useState("");
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [realtimeText, setRealtimeText] = useState('');
 
-  const loadModelFromAssets = useCallback(async() => {
+  const loadModelFromAssets = useCallback(async () => {
     whisper.current = await initWhisper({
       filePath: require('./assets/whisper/ggml-tiny.bin'),
     });
-  }, [])
+  }, []);
 
   useEffect(() => {
     const initializeModel = async () => {
@@ -46,7 +71,6 @@ const App = () => {
     initializeModel();
   }, [isModelInitialized, loadModelFromAssets]);
 
-
   const startRealtimeTranscribe = async () => {
     await Audio.requestPermissionsAsync();
 
@@ -56,9 +80,8 @@ const App = () => {
       return;
     }
 
-    const { stop, subscribe } = await whisper.current.transcribeRealtime(
-      realtimeOptions
-    );
+    const { stop, subscribe } =
+      await whisper.current.transcribeRealtime(realtimeOptions);
 
     subscribe(({ isCapturing, data, processTime, recordingTime }) => {
       console.log(
@@ -67,24 +90,51 @@ const App = () => {
           Result: ${data?.result}
           Process time: ${processTime}ms
           Recording time: ${recordingTime}ms
-        `
+        `,
       );
 
-      setRealtimeText(data?.result ?? "");
+      setIsCapturing(isCapturing);
+      setRealtimeText(data?.result ?? '');
     });
-  }
+  };
 
-  return isModelInitialized ? (
-    <View style={styles.container}>
+  return (
+    <SafeAreaView>
       <StatusBar style='auto' />
-      <TouchableOpacity onPress={startRealtimeTranscribe}>
-        <Text>Start recording</Text>
-      </TouchableOpacity>
-      <Text>{realtimeText}</Text>
-    </View>
-  ) : (
-    <Text>Initializing model...</Text>
+      {isModelInitialized ? (
+        <View style={styles.container}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Speech to Text</Text>
+            <ScrollView>
+              <Text>{realtimeText}</Text>
+              <Text style={styles.transcription}>
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
+              </Text>
+            </ScrollView>
+            <Pressable
+              onPress={startRealtimeTranscribe}
+              style={styles.pressable}
+            >
+              <Foundation
+                name='record'
+                size={60}
+                color={isCapturing ? 'grey' : 'red'}
+              />
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Text>Initializing model...</Text>
+      )}
+    </SafeAreaView>
   );
-}
+};
 
 export default App;
