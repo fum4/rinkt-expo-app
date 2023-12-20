@@ -1,5 +1,4 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,7 +7,8 @@ import {
   SafeAreaView,
   Pressable,
 } from 'react-native';
-import { Foundation } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { Audio } from 'expo-av';
 import {
   TranscribeRealtimeOptions,
@@ -40,38 +40,46 @@ const styles = StyleSheet.create({
   },
 });
 
+const FAIL_TRANSCRIPTION_CHUNK: TranscriptionChunk = {
+  text: '< NO_TRANSCRIPTION_AVAILABLE >',
+  processTime: 0,
+};
+
 const realtimeOptions: TranscribeRealtimeOptions = {
   language: 'en',
-  realtimeAudioSec: 60,
+  realtimeAudioSec: 10,
   realtimeAudioSliceSec: 20,
   maxThreads: 6,
-  useVad: true,
+  // useVad: true,
+};
+
+type TranscriptionChunk = {
+  text: string;
+  processTime: number;
 };
 
 const App = () => {
   const whisper = useRef<WhisperContext>();
+  const realTimeStopCallback = useRef<() => Promise<void>>();
   const [isModelInitialized, setIsModelInitialized] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [realtimeText, setRealtimeText] = useState('');
-
-  const loadModelFromAssets = useCallback(async () => {
-    whisper.current = await initWhisper({
-      filePath: require('./assets/whisper/ggml-tiny.bin'),
-    });
-  }, []);
+  const [isRealTimeTranscribing, setIsRealTimeTranscribing] = useState(false);
+  const [transcriptionSlices, setTranscriptionSlices] = useState<
+    TranscriptionChunk[]
+  >([]);
 
   useEffect(() => {
-    const initializeModel = async () => {
+    (async () => {
       if (!isModelInitialized) {
-        await loadModelFromAssets();
+        whisper.current = await initWhisper({
+          filePath: require('./assets/whisper/ggml-tiny.bin'),
+        });
+
         setIsModelInitialized(true);
       }
-    };
+    })();
+  }, [isModelInitialized]);
 
-    initializeModel();
-  }, [isModelInitialized, loadModelFromAssets]);
-
-  const startRealtimeTranscribe = async () => {
+  const startRealTimeTranscribe = async () => {
     await Audio.requestPermissionsAsync();
 
     if (!whisper.current) {
@@ -83,7 +91,10 @@ const App = () => {
     const { stop, subscribe } =
       await whisper.current.transcribeRealtime(realtimeOptions);
 
-    subscribe(({ isCapturing, data, processTime, recordingTime }) => {
+    realTimeStopCallback.current = stop;
+    setIsRealTimeTranscribing(true);
+
+    subscribe(({ isCapturing, data, processTime, recordingTime, slices }) => {
       console.log(
         `
           Realtime transcribing: ${isCapturing ? 'ON' : 'OFF'}
@@ -93,46 +104,74 @@ const App = () => {
         `,
       );
 
-      setIsCapturing(isCapturing);
-      setRealtimeText(data?.result ?? '');
+      // TODO
+      const results = slices
+        ?.map(
+          ({ data }) =>
+            data?.segments.map(({ text, t0, t1 }) => ({
+              text,
+              processTime: t1 - t0,
+            })) || [FAIL_TRANSCRIPTION_CHUNK],
+        )
+        .flat();
+
+      setTranscriptionSlices(results || []);
     });
+  };
+
+  const stopRealTimeTranscribe = () => {
+    realTimeStopCallback.current?.();
+    setIsRealTimeTranscribing(false);
   };
 
   return (
     <SafeAreaView>
       <StatusBar style='auto' />
-      {isModelInitialized ? (
-        <View style={styles.container}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Speech to Text</Text>
-            <ScrollView>
-              <Text>{realtimeText}</Text>
-              <Text style={styles.transcription}>
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-                asdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasdasdadasdasdasd
-              </Text>
-            </ScrollView>
-            <Pressable
-              onPress={startRealtimeTranscribe}
-              style={styles.pressable}
-            >
-              <Foundation
-                name='record'
-                size={60}
-                color={isCapturing ? 'grey' : 'red'}
-              />
-            </Pressable>
-          </View>
+      <View style={styles.container}>
+        <View style={styles.content}>
+          {isModelInitialized ? (
+            <>
+              <Text style={styles.title}>Whisper AI</Text>
+              <ScrollView
+                contentContainerStyle={{
+                  justifyContent: 'flex-start',
+                  gap: 20,
+                }}
+              >
+                {transcriptionSlices.map(({ text, processTime }) => (
+                  <View
+                    key={`${text}-${processTime}`}
+                    style={styles.transcription}
+                  >
+                    <Text>{`Chunk: ${text}`}</Text>
+                    <Text>{`Process time: ${processTime / 100}s`}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Pressable
+                onPress={
+                  isRealTimeTranscribing
+                    ? stopRealTimeTranscribe
+                    : startRealTimeTranscribe
+                }
+                style={styles.pressable}
+              >
+                <MaterialCommunityIcons
+                  name={
+                    isRealTimeTranscribing
+                      ? 'stop-circle-outline'
+                      : 'record-circle'
+                  }
+                  size={60}
+                  color='red'
+                />
+              </Pressable>
+            </>
+          ) : (
+            <Text>Initializing model...</Text>
+          )}
         </View>
-      ) : (
-        <Text>Initializing model...</Text>
-      )}
+      </View>
     </SafeAreaView>
   );
 };
